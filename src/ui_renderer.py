@@ -180,6 +180,19 @@ def draw_sidebar():
     state.screen.blit(val, (constants.SIDEBAR_X + pad, y))
     y += val.get_height() + 10
 
+    # --- Evaluation ---
+    eval_s = str(state.ai_eval_score)
+    eval_color = constants.SUCCESS if eval_s.startswith('+') else (constants.DANGER if eval_s.startswith('-') else constants.YELLOW)
+    lbl_eval = font_hint.render("EVALUATION (White \u2192)", True, constants.TEXT_DIM)
+    eval_font = pygame.font.SysFont('Segoe UI', 30, bold=True)
+    val_eval = eval_font.render(eval_s, True, eval_color)
+    state.screen.blit(lbl_eval, (constants.SIDEBAR_X + pad, y))
+    y += lbl_eval.get_height() + 2
+    state.screen.blit(val_eval, (constants.SIDEBAR_X + pad, y))
+    y += val_eval.get_height() + 10
+    pygame.draw.line(state.screen, (50, 55, 80), (constants.SIDEBAR_X + pad, y), (constants.SIDEBAR_X + constants.SIDEBAR_WIDTH - pad, y), 1)
+    y += 8
+
     # --- Timer Settings ---
     lbl = font_hint.render("TIMER SETTINGS", True, constants.TEXT_DIM)
     state.screen.blit(lbl, (constants.SIDEBAR_X + pad, y))

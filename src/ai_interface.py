@@ -24,6 +24,7 @@ try:
     model = genai.GenerativeModel(model_name)
     print(f"--- Gemini loaded with model: {model_name} ---")
 except Exception as e:
+    logger.error(f"Gemini model load error: {e}")
     print(f"--- Gemini model {model_name} error, trying fallback... ---")
     model = genai.GenerativeModel('gemini-pro')
 
@@ -98,6 +99,7 @@ def get_ai_coach_commentary(fen, best_move, evaluation, callback):
         except Exception as e:
             AI_STATUS = "Coach Error"
             logger.error(f"Gemini Error: {e}")
+            print(f"--- Gemini Conversation Error: {e} ---")
             callback(f"Coach had an error (See console)")
 
     threading.Thread(target=run).start()
