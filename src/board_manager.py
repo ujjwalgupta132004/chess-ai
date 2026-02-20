@@ -3,6 +3,12 @@ from models import ChessPiece
 
 def initialize_game_board():
     """Starts a new game by placing all 32 pieces in their standard positions."""
+    # Reset timers and log
+    state.white_time = state.timer_initial_seconds
+    state.black_time = state.timer_initial_seconds
+    state.game_move_log = []
+    state.move_history = []
+
     # Reset board to all empty squares first
     for r in range(8):
         for c in range(8):

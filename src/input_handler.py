@@ -5,7 +5,7 @@ import ai_agent
 import move_logic
 import engine
 
-def handle_mouse_input(position, hint_btn_rect, toggle_btn_rect):
+def handle_mouse_input(position, ui_rects):
     """Translates a user click into a selection or a move execution."""
     mx, my = position
 
@@ -23,10 +23,11 @@ def handle_mouse_input(position, hint_btn_rect, toggle_btn_rect):
         return
 
     # 2. Sidebar button clicks
-    if hint_btn_rect.collidepoint(mx, my):
+    if ui_rects['hint'].collidepoint(mx, my):
         ai_agent.get_ai_hint()
         return
-    if toggle_btn_rect.collidepoint(mx, my):
+        
+    if ui_rects['bot_tog'].collidepoint(mx, my):
         state.ai_opponent_enabled = not state.ai_opponent_enabled
         if state.ai_opponent_enabled and state.current_turn_color == 'black':
             ai_agent.perform_ai_turn()
@@ -34,6 +35,19 @@ def handle_mouse_input(position, hint_btn_rect, toggle_btn_rect):
         state.active_selected_pos = None
         state.legal_moves_for_selected = []
         return
+
+    # Timer Toggle
+    if ui_rects['clock_tog'].collidepoint(mx, my):
+        state.timer_active = not state.timer_active
+        return
+        
+    # Timer Presets
+    for rect, secs in ui_rects['presets']:
+        if rect.collidepoint(mx, my):
+            state.timer_initial_seconds = secs
+            state.white_time = secs
+            state.black_time = secs
+            return
 
     # 3. Board coordinate calculation (accounting for offsets)
     if mx < constants.SIDEBAR_X and my >= constants.BOARD_OFFSET_Y and my < constants.BOARD_OFFSET_Y + constants.BOARD_PX:

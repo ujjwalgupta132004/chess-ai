@@ -23,6 +23,13 @@ def wrap_text(text, font, max_width):
         lines.append(' '.join(line_words))
     return lines
 
+def format_time(seconds):
+    """Formats seconds into MM:SS."""
+    s = max(0, int(seconds))
+    mins = s // 60
+    secs = s % 60
+    return f"{mins:02d}:{secs:02d}"
+
 def draw_topbar():
     """Draws the top toolbar with board theme switcher."""
     pygame.draw.rect(state.screen, constants.BG_DARK, (0, 0, constants.WINDOW_W, constants.TOPBAR_HEIGHT))
@@ -130,17 +137,18 @@ def draw_bottom_bar():
         state.screen.blit(hint_txt, (12, bar_y + 10))
 
 def draw_sidebar():
-    """Renders the AI coach panel on the right side."""
+    """Renders the AI coach panel and Timer controls."""
     sb_y = 0
     sb_h = constants.WINDOW_H
     pygame.draw.rect(state.screen, constants.BG_SIDEBAR, (constants.SIDEBAR_X, sb_y, constants.SIDEBAR_WIDTH, sb_h))
     pygame.draw.line(state.screen, constants.ACCENT, (constants.SIDEBAR_X, 0), (constants.SIDEBAR_X, sb_h), 2)
 
     pad = 16
-    font_title  = pygame.font.SysFont('Segoe UI', 26, bold=True)
+    font_title  = pygame.font.SysFont('Segoe UI', 24, bold=True)
     font_med    = pygame.font.SysFont('Segoe UI', 18, bold=True)
     font_small  = pygame.font.SysFont('Segoe UI', 15)
     font_hint   = pygame.font.SysFont('Segoe UI', 13)
+    font_timer  = pygame.font.SysFont('Consolas', 26, bold=True)
 
     y = 12
 
@@ -151,18 +159,17 @@ def draw_sidebar():
     pygame.draw.line(state.screen, constants.ACCENT, (constants.SIDEBAR_X + pad, y), (constants.SIDEBAR_X + constants.SIDEBAR_WIDTH - pad, y), 1)
     y += 10
 
-
-
-
-
-
+    # --- Timers (Top Section) ---
+    if state.timer_active:
+        # Black Timer
+        b_col = constants.DANGER if state.current_turn_color == 'black' else constants.TEXT_DIM
+        b_lbl = font_hint.render("BLACK TIME", True, b_col)
+        b_val = font_timer.render(format_time(state.black_time), True, b_col)
+        state.screen.blit(b_lbl, (constants.SIDEBAR_X + pad, y))
+        state.screen.blit(b_val, (constants.SIDEBAR_X + constants.SIDEBAR_WIDTH - b_val.get_width() - pad, y - 5))
+        y += b_lbl.get_height() + 20
 
     # --- Engine Status ---
-
-
-
-
-    
     import ai_interface
     status_text = ai_interface.AI_STATUS
     status_color = constants.SUCCESS if "Ready" in status_text else (constants.DANGER if "Error" in status_text else constants.YELLOW)
@@ -173,18 +180,35 @@ def draw_sidebar():
     state.screen.blit(val, (constants.SIDEBAR_X + pad, y))
     y += val.get_height() + 10
 
-    # --- Evaluation ---
-    eval_s = str(state.ai_eval_score)
-    eval_color = constants.SUCCESS if eval_s.startswith('+') else (constants.DANGER if eval_s.startswith('-') else constants.YELLOW)
-    lbl = font_hint.render("EVALUATION (White \u2192)", True, constants.TEXT_DIM)
-    eval_font = pygame.font.SysFont('Segoe UI', 30, bold=True)
-    val = eval_font.render(eval_s, True, eval_color)
+    # --- Timer Settings ---
+    lbl = font_hint.render("TIMER SETTINGS", True, constants.TEXT_DIM)
     state.screen.blit(lbl, (constants.SIDEBAR_X + pad, y))
-    y += lbl.get_height() + 2
-    state.screen.blit(val, (constants.SIDEBAR_X + pad, y))
-    y += val.get_height() + 10
+    y += lbl.get_height() + 4
+    
+    # Toggle button
+    tog_text = "CLOCK: ON" if state.timer_active else "CLOCK: OFF"
+    tog_col  = constants.SUCCESS if state.timer_active else (60, 65, 80)
+    tog_rect = pygame.Rect(constants.SIDEBAR_X + pad, y, 110, 26)
+    pygame.draw.rect(state.screen, tog_col, tog_rect, border_radius=5)
+    t_surf = font_hint.render(tog_text, True, constants.WHITE)
+    state.screen.blit(t_surf, (tog_rect.centerx - t_surf.get_width() // 2, tog_rect.centery - t_surf.get_height() // 2))
+    
+    # Preset buttons
+    presets = [("5m", 300), ("10m", 600), ("30m", 1800)]
+    preset_rects = []
+    px = tog_rect.right + 8
+    for label, secs in presets:
+        p_rect = pygame.Rect(px, y, 45, 26)
+        p_col  = constants.ACCENT if state.timer_initial_seconds == secs else (50, 52, 70)
+        pygame.draw.rect(state.screen, p_col, p_rect, border_radius=5)
+        p_surf = font_hint.render(label, True, constants.WHITE)
+        state.screen.blit(p_surf, (p_rect.centerx - p_surf.get_width() // 2, p_rect.centery - p_surf.get_height() // 2))
+        preset_rects.append((p_rect, secs))
+        px += p_rect.width + 6
+        
+    y += tog_rect.height + 12
     pygame.draw.line(state.screen, (50, 55, 80), (constants.SIDEBAR_X + pad, y), (constants.SIDEBAR_X + constants.SIDEBAR_WIDTH - pad, y), 1)
-    y += 8
+    y += 10
 
     # --- Mode ---
     bot_active = state.ai_opponent_enabled
@@ -196,17 +220,15 @@ def draw_sidebar():
     mode_surf = font_med.render(mode_txt, True, mode_col)
     state.screen.blit(mode_surf, (constants.SIDEBAR_X + pad, y))
     y += mode_surf.get_height() + 8
-    pygame.draw.line(state.screen, (50, 55, 80), (constants.SIDEBAR_X + pad, y), (constants.SIDEBAR_X + constants.SIDEBAR_WIDTH - pad, y), 1)
-    y += 8
 
-    # --- Buttons (right after mode section) ---
+    # --- Action Buttons ---
     btn_w = constants.SIDEBAR_WIDTH - pad * 2
-    btn_h = 40
+    btn_h = 36
     btn_x = constants.SIDEBAR_X + pad
 
     # Hint button
     h_rect = pygame.Rect(btn_x, y, btn_w, btn_h)
-    pygame.draw.rect(state.screen, constants.ACCENT, h_rect, border_radius=10)
+    pygame.draw.rect(state.screen, constants.ACCENT, h_rect, border_radius=8)
     h_txt = font_med.render("\u2192 GET HINT", True, constants.WHITE)
     state.screen.blit(h_txt, (h_rect.centerx - h_txt.get_width() // 2, h_rect.centery - h_txt.get_height() // 2))
     y += btn_h + 8
@@ -214,16 +236,25 @@ def draw_sidebar():
     # Bot toggle button
     t_color = constants.DANGER if bot_active else (60, 65, 90)
     t_rect = pygame.Rect(btn_x, y, btn_w, btn_h)
-    pygame.draw.rect(state.screen, t_color, t_rect, border_radius=10)
+    pygame.draw.rect(state.screen, t_color, t_rect, border_radius=8)
     t_label = "DISABLE BOT" if bot_active else "ENABLE BOT"
     t_txt = font_med.render(t_label, True, constants.WHITE)
     state.screen.blit(t_txt, (t_rect.centerx - t_txt.get_width() // 2, t_rect.centery - t_txt.get_height() // 2))
     y += btn_h + 12
     pygame.draw.line(state.screen, (50, 55, 80), (constants.SIDEBAR_X + pad, y), (constants.SIDEBAR_X + constants.SIDEBAR_WIDTH - pad, y), 1)
-    y += 8
+    y += 10
+
+    # --- White Timer (Bottom of Section) ---
+    if state.timer_active:
+        w_col = constants.SUCCESS if state.current_turn_color == 'white' else constants.TEXT_DIM
+        w_lbl = font_hint.render("WHITE TIME", True, w_col)
+        w_val = font_timer.render(format_time(state.white_time), True, w_col)
+        state.screen.blit(w_lbl, (constants.SIDEBAR_X + pad, y))
+        state.screen.blit(w_val, (constants.SIDEBAR_X + constants.SIDEBAR_WIDTH - w_val.get_width() - pad, y - 5))
+        y += w_lbl.get_height() + 20
 
     # --- Advice Section ---
-    lbl = font_hint.render("GRANDMASTER ADVICE", True, constants.TEXT_DIM)
+    lbl = font_hint.render("COACH ADVICE", True, constants.TEXT_DIM)
     state.screen.blit(lbl, (constants.SIDEBAR_X + pad, y))
     y += lbl.get_height() + 6
     wrapped = wrap_text(state.ai_coach_message, font_small, constants.SIDEBAR_WIDTH - pad * 2)
@@ -234,4 +265,35 @@ def draw_sidebar():
         state.screen.blit(surf, (constants.SIDEBAR_X + pad, y))
         y += surf.get_height() + 3
 
-    return h_rect, t_rect
+    return {
+        'hint': h_rect,
+        'bot_tog': t_rect,
+        'clock_tog': tog_rect,
+        'presets': preset_rects
+    }
+
+def draw_history_panel():
+    """Renders the move history log on the rightmost side."""
+    hx = constants.HISTORY_X
+    pygame.draw.rect(state.screen, constants.BG_DARK, (hx, 0, constants.HISTORY_WIDTH, constants.WINDOW_H))
+    pygame.draw.line(state.screen, constants.ACCENT, (hx, 0), (hx, constants.WINDOW_H), 2)
+    
+    pad = 16
+    y = 12
+    font_title = pygame.font.SysFont('Segoe UI', 20, bold=True)
+    font_log   = pygame.font.SysFont('Consolas', 14)
+    
+    title = font_title.render("MOVE HISTORY", True, constants.TEXT_DIM)
+    state.screen.blit(title, (hx + pad, y))
+    y += title.get_height() + 8
+    pygame.draw.line(state.screen, (50, 52, 70), (hx + pad, y), (hx + constants.HISTORY_WIDTH - pad, y), 1)
+    y += 12
+    
+    # Show last 30 moves
+    log_slice = state.game_move_log[-30:]
+    for entry in log_slice:
+        entry_surf = font_log.render(entry, True, constants.TEXT_BRIGHT)
+        state.screen.blit(entry_surf, (hx + pad, y))
+        y += entry_surf.get_height() + 5
+        if y > constants.WINDOW_H - 20:
+            break

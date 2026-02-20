@@ -2,7 +2,8 @@
 TOPBAR_HEIGHT = 50      # Header toolbar height
 BOTTOM_BAR_HEIGHT = 40  # Bottom hint display height
 BOARD_LABEL_SIZE = 22   # Width/height of coordinate labels strip
-SIDEBAR_WIDTH = 320
+SIDEBAR_WIDTH = 300
+HISTORY_WIDTH = 240
 
 # Board renders inside the label strip, starting offset
 BOARD_LABEL_SIZE_OFFSET = BOARD_LABEL_SIZE
@@ -11,11 +12,12 @@ BOARD_OFFSET_Y = TOPBAR_HEIGHT + BOARD_LABEL_SIZE
 BOARD_PX = 690        # Board pixel size (divisible by 8)
 SQUARE_SIZE = BOARD_PX // 8
 
-WINDOW_W = BOARD_OFFSET_X + BOARD_PX + SIDEBAR_WIDTH
+WINDOW_W = BOARD_OFFSET_X + BOARD_PX + SIDEBAR_WIDTH + HISTORY_WIDTH
 WINDOW_H = TOPBAR_HEIGHT + BOARD_LABEL_SIZE + BOARD_PX + BOTTOM_BAR_HEIGHT
 
 # Alias for sidebar x start
 SIDEBAR_X = BOARD_OFFSET_X + BOARD_PX
+HISTORY_X = SIDEBAR_X + SIDEBAR_WIDTH
 
 # --- Color Palette ---
 WHITE  = (255, 255, 255)

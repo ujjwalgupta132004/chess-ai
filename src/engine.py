@@ -78,6 +78,18 @@ def execute_move(target_row, target_col):
     )
     state.move_history.append(move_rec)
 
+    # --- Log to Game Move Log ---
+    move_count = (len(state.move_history) + 1) // 2
+    color_name = "White" if state.current_turn_color == "white" else "Black"
+    
+    def get_coord_str(r, c):
+        return f"{chr(ord('a') + c)}{8 - r}"
+
+    s_str = get_coord_str(start_row, start_col)
+    e_str = get_coord_str(target_row, target_col)
+    log_entry = f"Move {move_count} {color_name}: {s_str.upper()} - {e_str.upper()}"
+    state.game_move_log.append(log_entry)
+
     # Switch turns
     state.current_turn_color = 'black' if state.current_turn_color == 'white' else 'white'
     
@@ -106,6 +118,8 @@ def undo_move():
         return
 
     move = state.move_history.pop()
+    if state.game_move_log:
+        state.game_move_log.pop()
     selected_row, selected_col = move.start_pos
     target_row, target_col = move.end_pos
 
