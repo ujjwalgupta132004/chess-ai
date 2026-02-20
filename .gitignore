@@ -1,0 +1,16 @@
+# Environment variables (Sensitive - DO NOT LEAK)
+.env
+
+# Python caching
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDEs
+.vscode/
+.idea/
+
+# OS specific
+.DS_Store
+Thumbs.db

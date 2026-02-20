@@ -18,7 +18,7 @@ def get_fully_legal_moves(piece, row, col):
         if is_safe:
             legal_moves.append((target_r, target_c))
             
-        # Revert simulation
+        # Revert simulation else condition
         state.board[row][col] = piece
         state.board[target_r][target_c] = original_piece
 

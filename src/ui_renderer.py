@@ -151,7 +151,18 @@ def draw_sidebar():
     pygame.draw.line(state.screen, constants.ACCENT, (constants.SIDEBAR_X + pad, y), (constants.SIDEBAR_X + constants.SIDEBAR_WIDTH - pad, y), 1)
     y += 10
 
+
+
+
+
+
+
     # --- Engine Status ---
+
+
+
+
+    
     import ai_interface
     status_text = ai_interface.AI_STATUS
     status_color = constants.SUCCESS if "Ready" in status_text else (constants.DANGER if "Error" in status_text else constants.YELLOW)

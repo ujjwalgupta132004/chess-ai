@@ -9,7 +9,8 @@ class ChessPiece:
         self.image = pygame.transform.scale(self.image, (constants.SQUARE_SIZE, constants.SQUARE_SIZE))
         self.has_moved = False
 
-class MoveRecord:
+class MoveRecord:  
+    """ for undo move"""
     """Stores all information needed to reverse a chess move."""
     def __init__(self, start_pos, end_pos, piece_moved, captured_piece, 
                  prev_en_passant, is_en_passant=False, 

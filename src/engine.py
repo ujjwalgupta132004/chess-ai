@@ -106,19 +106,19 @@ def undo_move():
         return
 
     move = state.move_history.pop()
-    sr, sc = move.start_pos
-    tr, tc = move.end_pos
+    selected_row, selected_col = move.start_pos
+    target_row, target_col = move.end_pos
 
     # Restore piece position
-    state.board[sr][sc] = move.piece_moved
-    state.board[tr][tc] = move.captured_piece
+    state.board[selected_row][selected_col] = move.piece_moved
+    state.board[target_row][target_col] = move.captured_piece
     move.piece_moved.has_moved = move.piece_moved_had_moved
 
     # Restore En Passant capture
     if move.is_en_passant:
-        # The captured pawn was at (sr, tc)
-        state.board[sr][tc] = move.captured_piece
-        state.board[tr][tc] = None
+        # The captured pawn was at (selected_row, target_col)
+        state.board[selected_row][target_col] = move.captured_piece
+        state.board[target_row][target_col] = None
 
     # Restore Castling Rook
     if move.is_castle:
@@ -130,7 +130,7 @@ def undo_move():
 
     # Restore Promotion
     if move.is_promotion:
-        state.board[sr][sc] = move.promoted_from
+        state.board[selected_row][selected_col] = move.promoted_from
 
     # Restore global state
     state.pawn_en_passant_target = move.prev_en_passant

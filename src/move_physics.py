@@ -24,14 +24,14 @@ def get_raw_piece_moves(piece, row, col):
             if row == start_row and state.board[row + 2 * move_dir][col] is None:
                 moves.append((row + 2 * move_dir, col))
         # Captures
-        for dc in [-1, 1]:
-            tr, tc = row + move_dir, col + dc
-            if 0 <= tr < 8 and 0 <= tc < 8:
-                target = state.board[tr][tc]
+        for direction_col in [-1, 1]:
+            targeted_row, targeted_col = row + move_dir, col + direction_col
+            if 0 <= targeted_row < 8 and 0 <= targeted_col < 8:
+                target = state.board[targeted_row][targeted_col]
                 if target and target.color != piece.color:
-                    moves.append((tr, tc))
-                elif (tr, tc) == state.pawn_en_passant_target:
-                    moves.append((tr, tc))
+                    moves.append((targeted_row,targeted_col))
+                elif (targeted_row, targeted_col) == state.pawn_en_passant_target:
+                    moves.append((targeted_row,targeted_col))
         return moves
 
     # Sliding logic for Rooks, Bishops, and Queens
@@ -46,8 +46,8 @@ def get_raw_piece_moves(piece, row, col):
     if piece.type == 'king':
         directions = [(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)]
 
-    for dr, dc in directions:
-        curr_r, curr_c = row + dr, col + dc
+    for direction_row, direction_col in directions:
+        curr_r, curr_c = row + direction_row, col + direction_col
         while 0 <= curr_r < 8 and 0 <= curr_c < 8:
             blocking_p = state.board[curr_r][curr_c]
             # Valid if empty or contains an enemy
@@ -57,8 +57,8 @@ def get_raw_piece_moves(piece, row, col):
             # Stop if the path is blocked OR if piece doesn't slide (Knight/King)
             if not is_sliding or blocking_p:
                 break
-            curr_r += dr
-            curr_c += dc
+            curr_r += direction_row
+            curr_c += direction_col
     return moves
 
 def is_cell_attacked(target_row, target_col, defender_color):
